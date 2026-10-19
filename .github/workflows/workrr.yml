@@ -1,0 +1,18 @@
+# Certify skills/csv-summary with the public Workrr certifier.
+# The certificate is signed keylessly via Sigstore and logged in public Rekor.
+name: workrr-certify
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  certify:
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    uses: workrr-trust/certify/.github/workflows/certify.yml@v0.1.0
+    with:
+      path: skills/csv-summary
