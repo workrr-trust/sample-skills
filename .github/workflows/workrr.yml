@@ -13,6 +13,6 @@ jobs:
       contents: read
       id-token: write
       attestations: write
-    uses: workrr-trust/certify/.github/workflows/certify.yml@v0.1.0
+    uses: workrr-trust/certify/.github/workflows/certify.yml@v0.1.1
     with:
       path: skills/csv-summary
