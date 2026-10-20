@@ -1,5 +1,7 @@
 # workrr-trust/sample-skills
 
+[![workrr certified](https://trust.workrr.ai/badge/workrr-trust/sample-skills.svg)](https://trust.workrr.ai/ledger/?repo=workrr-trust/sample-skills)
+
 A sample agent skill certified by the public [workrr certifier](https://github.com/workrr-trust/certify).
 
 - `skills/csv-summary/` — a small `SKILL.md` skill with a deterministic test suite
