@@ -1,4 +1,4 @@
-# Certify skills/csv-summary with the public Workrr certifier.
+# Certify skills/csv-summary with the public workrr certifier.
 # The certificate is signed keylessly via Sigstore and logged in public Rekor.
 name: workrr-certify
 

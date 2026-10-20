@@ -1,6 +1,6 @@
 # workrr-trust/sample-skills
 
-A sample agent skill certified by the public [Workrr certifier](https://github.com/workrr-trust/certify).
+A sample agent skill certified by the public [workrr certifier](https://github.com/workrr-trust/certify).
 
 - `skills/csv-summary/` — a small `SKILL.md` skill with a deterministic test suite
   (`workrr.json` → `node check.cjs`).
@@ -8,7 +8,7 @@ A sample agent skill certified by the public [Workrr certifier](https://github.c
   `workrr-trust/certify/.github/workflows/certify.yml@v0.1.1` on every push to `main`.
 
 Each run uploads a `workrr-certificate` artifact (a Sigstore bundle, logged in public
-Rekor). To verify it yourself, without trusting Workrr:
+Rekor). To verify it yourself, without trusting workrr:
 
 ```bash
 gh run download --repo workrr-trust/sample-skills -n workrr-certificate -D cert
