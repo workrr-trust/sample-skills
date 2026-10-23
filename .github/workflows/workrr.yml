@@ -1,5 +1,5 @@
-# Certify skills/csv-summary with the public workrr certifier.
-# The certificate is signed keylessly via Sigstore and logged in public Rekor.
+# Certify skills/csv-summary and skills/pdf-extract with the public workrr certifier.
+# Each certificate is signed keylessly via Sigstore and logged in public Rekor.
 name: workrr-certify
 
 on:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  certify:
+  certify-csv-summary:
     permissions:
       contents: read
       id-token: write
@@ -16,3 +16,12 @@ jobs:
     uses: workrr-trust/certify/.github/workflows/certify.yml@v0.1.1
     with:
       path: skills/csv-summary
+
+  certify-pdf-extract:
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    uses: workrr-trust/certify/.github/workflows/certify.yml@v0.1.1
+    with:
+      path: skills/pdf-extract
