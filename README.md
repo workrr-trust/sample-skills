@@ -4,8 +4,10 @@
 
 A sample agent skill certified by the public [workrr certifier](https://github.com/workrr-trust/certify).
 
-- `skills/csv-summary/` — a small `SKILL.md` skill with a deterministic test suite
-  (`workrr.json` → `node check.cjs`).
+- `skills/csv-summary/` — an RFC 4180 CSV profiler `SKILL.md` skill with a deterministic
+  42-test suite (`workrr.json` → `node check.cjs`, `42/42 checks pass`).
+- `skills/pdf-extract/` — a PDF stream, metadata, and table extraction `SKILL.md` skill
+  with a deterministic 42-test suite (`workrr.json` → `node check.cjs`, `42/42 checks pass`).
 - `.github/workflows/workrr.yml` — calls
   `workrr-trust/certify/.github/workflows/certify.yml@v0.1.1` on every push to `main`.
 
