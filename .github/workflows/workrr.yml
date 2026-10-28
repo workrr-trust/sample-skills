@@ -1,5 +1,8 @@
 # Certify skills/csv-summary and skills/pdf-extract with the public workrr certifier.
 # Each certificate is signed keylessly via Sigstore and logged in public Rekor.
+# Then the GitLab witness certifies the same commit on GitLab CI; with both
+# certificates in this repository's attestation store, verifiers report
+# Reproduced (gold). See docs/gitlab-certifier.md in workrr-trust/certify.
 name: workrr-certify
 
 on:
@@ -7,13 +10,15 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   certify-csv-summary:
     permissions:
       contents: read
       id-token: write
       attestations: write
-    uses: workrr-trust/certify/.github/workflows/certify.yml@v0.1.3
+    uses: workrr-trust/certify/.github/workflows/certify.yml@v0.1.7
     with:
       path: skills/csv-summary
 
@@ -22,6 +27,66 @@ jobs:
       contents: read
       id-token: write
       attestations: write
-    uses: workrr-trust/certify/.github/workflows/certify.yml@v0.1.3
+    uses: workrr-trust/certify/.github/workflows/certify.yml@v0.1.7
     with:
       path: skills/pdf-extract
+
+  reproduce:
+    # Starts a witness run in gitlab.com/workrr-trust/certify-gitlab at the same
+    # certifier release and stores its certificate next to ours. Nothing here
+    # signs: the bundle is verified by whoever reads it, wherever it is stored.
+    needs: [certify-csv-summary, certify-pdf-extract]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      attestations: write
+    strategy:
+      fail-fast: false
+      matrix:
+        path: [skills/csv-summary, skills/pdf-extract]
+    env:
+      CERTIFIER_TAG: v0.1.7
+      GITLAB_PROJECT: https://gitlab.com/api/v4/projects/workrr-trust%2Fcertify-gitlab
+      ARTIFACT_PATH: ${{ matrix.path }}
+    steps:
+      - name: Start the GitLab witness
+        id: trigger
+        env:
+          GITLAB_TRIGGER_TOKEN: ${{ secrets.GITLAB_TRIGGER_TOKEN }}
+        run: |
+          set -euo pipefail
+          pipeline=$(curl -sSf -X POST "$GITLAB_PROJECT/trigger/pipeline" \
+            --form "token=$GITLAB_TRIGGER_TOKEN" --form "ref=$CERTIFIER_TAG" \
+            --form "variables[WORKRR_REPO]=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
+            --form "variables[WORKRR_COMMIT]=$GITHUB_SHA" \
+            --form "variables[WORKRR_PATH]=$ARTIFACT_PATH" | jq -r .id)
+          [[ $pipeline =~ ^[0-9]+$ ]] || { echo "no pipeline started"; exit 1; }
+          echo "pipeline: https://gitlab.com/workrr-trust/certify-gitlab/-/pipelines/$pipeline"
+          echo "pipeline=$pipeline" >>"$GITHUB_OUTPUT"
+      - name: Wait for the witness certificate
+        env:
+          PIPELINE: ${{ steps.trigger.outputs.pipeline }}
+        run: |
+          set -euo pipefail
+          for _ in $(seq 120); do
+            status=$(curl -sSf "$GITLAB_PROJECT/pipelines/$PIPELINE" | jq -r .status)
+            case "$status" in
+              success) break ;;
+              failed|canceled|skipped) echo "witness pipeline $status"; exit 1 ;;
+            esac
+            sleep 15
+          done
+          [ "$status" = success ] || { echo "witness pipeline still $status after 30 minutes"; exit 1; }
+          job=$(curl -sSf "$GITLAB_PROJECT/pipelines/$PIPELINE/jobs" | jq -r '.[] | select(.name == "workrr-certify") | .id')
+          curl -sSfL -o bundle.json "$GITLAB_PROJECT/jobs/$job/artifacts/certificate/certificate.sigstore.json"
+          # Only a sanity check that this is the run we asked for; verifiers decide trust.
+          statement=$(jq -r .dsseEnvelope.payload bundle.json | base64 -d)
+          jq -e --arg c "$GITHUB_SHA" --arg p "$ARTIFACT_PATH" \
+            '.predicate.source.commit == $c and .predicate.source.path == $p' <<<"$statement" >/dev/null
+      - name: Store it in this repository's attestation store
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          jq '{bundle: .}' bundle.json | gh api -X POST "repos/$GITHUB_REPOSITORY/attestations" --input - >/dev/null
+          echo "stored witness certificate (Rekor $(jq -r '.verificationMaterial.tlogEntries[0].logIndex' bundle.json))" >>"$GITHUB_STEP_SUMMARY"
