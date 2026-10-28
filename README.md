@@ -9,7 +9,7 @@ A sample agent skill certified by the public [workrr certifier](https://github.c
 - `skills/pdf-extract/` — a PDF stream, metadata, and table extraction `SKILL.md` skill
   with a deterministic 42-test suite (`workrr.json` → `node check.cjs`, `42/42 checks pass`).
 - `.github/workflows/workrr.yml` — calls
-  `workrr-trust/certify/.github/workflows/certify.yml@v0.1.7` on every push to `main`,
+  `workrr-trust/certify/.github/workflows/certify.yml@v0.1.8` on every push to `main`,
   then starts the GitLab witness for the same commit. Two forges agreeing is the level
   **Reproduced**.
 
