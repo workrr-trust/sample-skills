@@ -33,13 +33,13 @@ jobs:
 
   reproduce:
     # Starts a witness run in gitlab.com/workrr-trust/certify-gitlab at the same
-    # certifier release and stores its certificate next to ours. Nothing here
-    # signs: the bundle is verified by whoever reads it, wherever it is stored.
+    # certifier release. Its certificate stays in that job's artifacts and in public
+    # Rekor, which indexes it by the skill's digest (GitHub's attestation store only
+    # accepts certificates GitHub issued). Nothing here signs.
     needs: [certify-csv-summary, certify-pdf-extract]
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      attestations: write
     strategy:
       fail-fast: false
       matrix:
@@ -83,10 +83,5 @@ jobs:
           statement=$(jq -r .dsseEnvelope.payload bundle.json | base64 -d)
           jq -e --arg c "$GITHUB_SHA" --arg p "$ARTIFACT_PATH" \
             '.predicate.source.commit == $c and .predicate.source.path == $p' <<<"$statement" >/dev/null
-      - name: Store it in this repository's attestation store
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          jq '{bundle: .}' bundle.json | gh api -X POST "repos/$GITHUB_REPOSITORY/attestations" --input - >/dev/null
-          echo "stored witness certificate (Rekor $(jq -r '.verificationMaterial.tlogEntries[0].logIndex' bundle.json))" >>"$GITHUB_STEP_SUMMARY"
+          index=$(jq -r '.verificationMaterial.tlogEntries[0].logIndex' bundle.json)
+          echo "GitLab witness for \`$ARTIFACT_PATH\`: job $job, Rekor [$index](https://search.sigstore.dev/?logIndex=$index)" >>"$GITHUB_STEP_SUMMARY"
