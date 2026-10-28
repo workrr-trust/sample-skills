@@ -18,7 +18,7 @@ jobs:
       contents: read
       id-token: write
       attestations: write
-    uses: workrr-trust/certify/.github/workflows/certify.yml@v0.1.8
+    uses: workrr-trust/certify/.github/workflows/certify.yml@v0.1.9
     with:
       path: skills/csv-summary
 
@@ -27,7 +27,7 @@ jobs:
       contents: read
       id-token: write
       attestations: write
-    uses: workrr-trust/certify/.github/workflows/certify.yml@v0.1.8
+    uses: workrr-trust/certify/.github/workflows/certify.yml@v0.1.9
     with:
       path: skills/pdf-extract
 
@@ -45,7 +45,7 @@ jobs:
       matrix:
         path: [skills/csv-summary, skills/pdf-extract]
     env:
-      CERTIFIER_TAG: v0.1.8
+      CERTIFIER_TAG: v0.1.9
       GITLAB_PROJECT: https://gitlab.com/api/v4/projects/workrr-trust%2Fcertify-gitlab
       ARTIFACT_PATH: ${{ matrix.path }}
     steps:
